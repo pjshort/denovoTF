@@ -47,7 +47,7 @@ single_sequence_coverage <- function(seq, rel_pos, pwm_list, min.score = "95%"){
 
 scan_regions <- function(sequences, rel_positions, pwm_list, min.score = "95%"){
   
-  # input: vector of sequences, vector of relative positions of de novo within sequence, list of PWMs to query, min.score (optional)
+  # input: vector of sequences, vector of relative positions of de novo within sequence, list of PWMs to query, minimum binding score (optional)
   # output: list with one element for each pair of seq, rel_pos that contains predicted de novo binding events (if any)
   
   scan_results = mapply(single_sequence_coverage, sequences, rel_positions, MoreArgs = list("pwm_list" = pwm_list))
@@ -55,6 +55,36 @@ scan_regions <- function(sequences, rel_positions, pwm_list, min.score = "95%"){
   return(scan_results)
 }
 
+gain_of_binding_scan <- function(ref_sequences, alt_sequences, pwm_list, min.score = "95%"){
+  
+  # input: vector of ref sequences, vec. of alt sequences, list of PWMs to query, minimum binding score (optional)
+  # returns: SiteSetList of original site that was passed plus any sites that were NOT found with ref (but are found with alt)
+  
+  # scan against all PWMs with the reference sequence
+  ref_results = mapply(single_sequence_coverage, ref_sequences, rel_positions, MoreArgs = list("pwm_list" = pwm_list))
+  
+  # scan against all PWMs with the alternate sequence (after mutation)
+  alt_results = mapply(single_sequence_coverage, alt_sequences, rel_positions, MoreArgs = list("pwm_list" = pwm_list))
+  
+  # the only differences between scan results should be as due to a change in binding affinity due to the mutation
+  
+  
+}
+
+split_site_set <- function(ss){
+  
+  # input: SiteSet
+  # output: two or more SiteSets with one row each from original site set
+  
+  l = length(ss)
+  s = list(ss[1])
+  if (l > 1){
+    for (i in seq(2, l)){
+      s = c(s, ss[i])
+    }
+  }
+  return(s)
+}
 
 ### calculate ref vs. alt change in binding
 
@@ -80,3 +110,4 @@ binding_change <- function(site_set, rel_pos, ref, alt, min.score = "95%"){
   
   return(cbind(ref_score, alt_score))
 }
+

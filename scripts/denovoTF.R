@@ -41,18 +41,21 @@ args <- parse_args(OptionParser(option_list=option_list))
 
 ### check that the input file has columns "unique_id", "chr", "pos", "ref", "alt". if no "unique_id", create one
 
-dn <- read.table(args$de_novos, sep = "\t", header = TRUE)
+de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE)
+
+# remove indels from de novo file - TODO: add support to analyze indels
+de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
 
 reqd_columns <- c("chr", "pos", "ref", "alt")
 
 # throw error if any required column is missing
-if (!all(reqd_columns %in% colnames(dn))){
+if (!all(reqd_columns %in% colnames(de_novos))){
   stop("One or more of the required column names missing from input de novo file. Requires: \"chr\", \"pos\", \"ref\", \"alt\"")
 }
 
 # unique_id not present, add column in the form chr:posREF>ALT
-if (!("unique_id" %in% colnames(dn))){
-  dn$unique_id <- paste0(dn$chr, ":", dn$pos, dn$ref, ">", dn$alt)
+if (!("unique_id" %in% colnames(de_novos))){
+  de_novos$unique_id <- paste0(de_novos$chr, ":", de_novos$pos, de_novos$ref, ">", de_novos$alt)
 }
 
 ### load the full JASPAR position-weight matrix list using all sources (SELEX, ChIP-seq, protein-binding microarray (PBM))
@@ -81,8 +84,8 @@ max_motif_length = max(sapply(pwm_list, function(t) ncol(t@profileMatrix)))
 if ( args$verbose ) { write("Getting sequence context for each de novo...", stderr()) }
 
 m = max_motif_length
-seqs = mapply(function(chr, start, stop) getSeq(Hsapiens, chr, start, stop), paste0("chr", dn$chr), dn$pos - m, dn$pos + m)
-names(seqs) = dn$unique_id
+seqs = mapply(function(chr, start, stop) getSeq(Hsapiens, chr, start, stop), paste0("chr", de_novos$chr), de_novos$pos - m, de_novos$pos + m)
+names(seqs) = de_novos$unique_id
 #TODO: put in test that makes sure ref/alt match the sequence returned by BSgenome getSeq
 
 ### scan every sequence against the full JASPAR list and keep track of any binding events that intersect with the de novo position.
@@ -90,34 +93,46 @@ names(seqs) = dn$unique_id
 if ( args$verbose ) { write("Scanning sequence surrounding each de novo for predicted transcription factor binding event...", stderr()) }
 
 rel_positions <- rep(m+1, length(seqs)) # relative position should be the middle of each seq object (max motif length +1)
-scanned_regions = scan_regions(seqs, rel_positions, pwm_list, min.score = args$min_score)
-hits_per_de_novo = sapply(scanned_regions, length)
+scanned_regions <- scan_regions(seqs, rel_positions, pwm_list, min.score = args$min_score)
+
+# check whether scanned region hits any TFBS
+hits_TFBS <- sapply(scanned_regions, length) > 0
+
+# count the number of times EACH TFBS is hit by the de novo - almost all the time this will be one (but not at always)
+hits_per_de_novo_per_TFBS <- sapply(scanned_regions[hits_TFBS > 0], function(s) sapply(s, length))
+
+# total disruptions per de novo
+total_hits_per_de_novo <- sapply(hits_per_de_novo_per_TFBS, sum)
 
 ### calculate the increase/decrease in binding affinity
 if ( args$verbose ) { write(sprintf("Analyzing change in information content for ref vs. alt on predicting TF binding events..."), stderr()) }
 
 # flatten the list of hits - used rep with hits_per_de_denovo to repeat alt and ref allele as much as necessary for de novos
 # which perturb multiple motifs
-r = unlist(scanned_regions[hits_per_de_novo > 0])
-rel_positions = rep(m+1, sum(hits_per_de_novo))
-ref = as.character(rep(dn$ref, hits_per_de_novo))
-alt = as.character(rep(dn$alt, hits_per_de_novo))
+r = scanned_regions[hits_TFBS]
+dn <- de_novos[hits_TFBS, ]
+rel_positions = rep(m+1, sum(total_hits_per_de_novo))
+ref = as.character(rep(dn$ref, total_hits_per_de_novo))
+alt = as.character(rep(dn$alt, total_hits_per_de_novo))
 
-scores <- mapply(binding_change, r, rel_positions, ref, alt, MoreArgs = list("min.score" = "95%"))
-scores <- t(scores)  # flip to columns (ref_score, alt_score)
+# take each de novo and split each SiteSet into two if necessary
+unique_events <- unlist(sapply(unlist(r), function(s) split_site_set(s)))
+
+scores <- mapply(binding_change, unique_events, rel_positions, ref, alt, MoreArgs = list("min.score" = "95%"))
+s <- t(scores)  # flip to columns (ref_score, alt_score)
 
 ### reformat the results into annotated de novo output file and exit
 # results will have similar form as input with additional columns and additional rows where a de novo hits more than one TF binding site
 # unique_id, chr, pos, ref, alt, tfbs_name, jaspar_internal, ref_score, alt_score
 
 # process remaining columns for data frame
-unique_id <- rep(dn$unique_id, hits_per_de_novo)
-chr <- rep(dn$chr, hits_per_de_novo)
-pos <- rep(dn$pos, hits_per_de_novo)
-tfbs_name <- unlist(sapply(r, function(s) s@pattern@name))
-jaspar_internal <- unlist(sapply(r, function(s) s@pattern@ID))
-ref_score <- scores[,1]
-alt_score <- scores[,2]
+unique_id <- rep(dn$unique_id, total_hits_per_de_novo)
+chr <- rep(dn$chr, total_hits_per_de_novo)
+pos <- rep(dn$pos, total_hits_per_de_novo)
+tfbs_name <- unlist(sapply(unique_events, function(s) s@pattern@name))
+jaspar_internal <- unlist(sapply(unique_events, function(s) s@pattern@ID))
+ref_score <- s[,1]
+alt_score <- s[,2]
 
 # create annotated de novo data frame
 annotated_dn <- data.frame(unique_id, chr, pos, ref, alt, tfbs_name, jaspar_internal, ref_score, alt_score)

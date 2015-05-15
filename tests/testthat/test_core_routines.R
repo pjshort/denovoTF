@@ -50,3 +50,25 @@ test_that("change in score for de novo binding matches expectation", {
   
   
 })
+
+test_that("single de novo hits same TFBS twice", {
+  
+  chr = "chr8"
+  pos = 67365913
+  ref = "G"
+  alt = "A"
+  
+  seq = get_sequence(chr, pos-20, pos+20, version = "hg19")
+  pos_hits = single_sequence_coverage(seq, rel_pos = 21, pwm_list, min.score = "95%")
+  
+  expect_equal(length(pos_hits), 1) # de novo should hit a single PWM
+  expect_equal(length(pos_hits[[1]]), 2) # there should be TWO different binding events (one + and one - strand) that result (see below)
+  
+  #>pos_hits
+  #$MA0003.1
+  #An object of class SiteSet with 2 site sequences
+  #seqname source feature start end    score strand frame                                     attributes
+  #1 ref_sequence   TFBS    TFBS    16  24 10.72269      +     . TF=TFAP2A;class=Zipper-Type;sequence=GCCCCGGGC
+  #2 ref_sequence   TFBS    TFBS    16  24 10.82021      -     . TF=TFAP2A;class=Zipper-Type;sequence=GCCCGGGGC
+  
+})
