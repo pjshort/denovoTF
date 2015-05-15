@@ -17,7 +17,10 @@ The output file will have one row for each de novo + TFBS predicted binding 'eve
 
 Output file example:
 
-unique_id chr       pos ref alt tfbs_name jaspar_internal ref_score alt_score
-3:180462583T>C   3 180462583   T   C     GATA2        MA0036.1  5.931088 -2.124195
-13:95600362T>A  13  95600362   T   A       YY1        MA0095.1  7.934169  1.507904
+|   unique_id    | chr |    pos    | ref | alt | tfbs_name | jaspar_internal | ref_score | alt_score |
+| -------------- | --- | --------- | --- | --- | --------- | --------------- | --------- | --------- |
+| 3:180462583T>C |  3  | 180462583 |  T  |  C  |   GATA2   |     MA0036.1    |  5.931088 | -2.124195 |
+| 13:95600362T>A |  13 |  95600362 |  T  |  A  |   YY1     |     MA0095.1    |  7.934169 | 1.507904  |
+
+
 
