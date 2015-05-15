@@ -20,6 +20,18 @@ get_sequence <- function(chr, start, stop, version = "hg19") {
   return(seqs)
 }
 
+
+get_alt_sequence <- function(sequence, sub_position, alt) {
+  
+  # input: sequence, positions where alteration has occured, alteration to substitute in
+  # output: new alt_sequence
+  
+  alt_sequence = sequence
+  alt_sequence[sub_position] = alt # TODO: add a test to ensure that sub_position and alt are the same length
+
+  return(alt_sequence)
+}
+
 ### Annotated sequences with predicted TF binding
 
 single_sequence_coverage <- function(seq, rel_pos, pwm_list, min.score = "95%"){
@@ -55,19 +67,36 @@ scan_regions <- function(sequences, rel_positions, pwm_list, min.score = "95%"){
   return(scan_results)
 }
 
-gain_of_binding_scan <- function(ref_sequences, alt_sequences, pwm_list, min.score = "95%"){
+gain_of_binding_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%"){
   
-  # input: vector of ref sequences, vec. of alt sequences, list of PWMs to query, minimum binding score (optional)
+  # input: single ref sequence, single alt sequence, list of PWMs to query, minimum binding score (optional)
   # returns: SiteSetList of original site that was passed plus any sites that were NOT found with ref (but are found with alt)
   
-  # scan against all PWMs with the reference sequence
-  ref_results = mapply(single_sequence_coverage, ref_sequences, rel_positions, MoreArgs = list("pwm_list" = pwm_list))
+  # TODO: alter so rel_pos can be a range instead of a point!
   
-  # scan against all PWMs with the alternate sequence (after mutation)
-  alt_results = mapply(single_sequence_coverage, alt_sequences, rel_positions, MoreArgs = list("pwm_list" = pwm_list))
+  alt_seq = get_alt_sequence(ref_seq, rel_pos, ref, alt)
+  
+  # scan against all PWMs with the reference sequence and alt (after mutation)
+  ref_results = single_sequence_coverage(ref_seq, rel_pos, pwm_list, min.score = min.score)
+  alt_results = single_sequence_coverage(alt_seq, rel_pos, pwm_list, min.score = min.score)
   
   # the only differences between scan results should be as due to a change in binding affinity due to the mutation
+
+  ref_pwms = names(ref_results)
+  alt_pwms = names(alt_results)
   
+  #TODO: PICK UP HERE BELOW!!!
+  
+  # scan ref_pwms for change due to alt - tag with PERT if in alt_pwms and LOB if not in alt_pwms
+  LOB = ref_results[!(ref_pwms %in% alt_pwms)]
+  binding_change_scores = sapply(LOB, function(r) binding_change(r, rel_pos, ref, alt))
+  
+  # look at GOB alts and see what ref score would have been - tag with GOB
+  GOB = sapply(LOB, function(r) binding_change(r, rel_pos, alt, ref))  # note, the score output will be transposed! (alt_score, ref_score)
+  
+  # pick up here with PERTs
+  
+  return(list("GOB" = alt_results[!(alt_pwms %in% ref_pwms)], "LOB" = ref_results[!(ref_pwms %in% alt_pwms)]))
   
 }
 

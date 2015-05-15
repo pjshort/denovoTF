@@ -1,4 +1,5 @@
 # the main script to run in order to annotate a list of de novos with predicted TF binding sites
+# author: Patrick Short <pjs90@cam.ac.uk>
 
 # INPUT:
 # de novo file with mandatory columns: "unique_id", "chr", "pos", "ref", "alt" - if no unique_id is provided, then one will be made in the form chr:posref>alt
@@ -84,9 +85,8 @@ max_motif_length = max(sapply(pwm_list, function(t) ncol(t@profileMatrix)))
 if ( args$verbose ) { write("Getting sequence context for each de novo...", stderr()) }
 
 m = max_motif_length
-seqs = mapply(function(chr, start, stop) getSeq(Hsapiens, chr, start, stop), paste0("chr", de_novos$chr), de_novos$pos - m, de_novos$pos + m)
+seqs = get_sequence(paste0("chr", de_novos$chr), de_novos$pos - m, de_novos$pos + m)
 names(seqs) = de_novos$unique_id
-#TODO: put in test that makes sure ref/alt match the sequence returned by BSgenome getSeq
 
 ### scan every sequence against the full JASPAR list and keep track of any binding events that intersect with the de novo position.
 
