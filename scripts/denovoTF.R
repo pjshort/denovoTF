@@ -1,18 +1,18 @@
 # the main script to run in order to annotate a list of de novos with predicted TF binding sites
 
 # INPUT:
-  # de novo file with mandatory columns: "unique_id", "chr", "pos", "ref", "alt" - if no unique_id is provided, then one will be made in the form chr:posref>alt
-  # optional: --tf_list -> list of transcription factor motifs (by jaspar_internal id e.g. MA0098.1) in single column with NO HEADER
-  # optional: --hg_version -> build for human genome (this is essential to get right as it determines the sequence context used to scan)
-  # optional: --min_score -> minimum score cutoff to call binding event (default to 95% i.e. adjusted p-val <0.05)
-  # optional: --summary -> creates an additional summary file summarizing hits per TFBS, global TFBS hit rate, etc. (NOT YET IMPLEMENTED)
+# de novo file with mandatory columns: "unique_id", "chr", "pos", "ref", "alt" - if no unique_id is provided, then one will be made in the form chr:posref>alt
+# optional: --tf_list -> list of transcription factor motifs (by jaspar_internal id e.g. MA0098.1) in single column with NO HEADER
+# optional: --hg_version -> build for human genome (this is essential to get right as it determines the sequence context used to scan)
+# optional: --min_score -> minimum score cutoff to call binding event (default to 95% i.e. adjusted p-val <0.05)
+# optional: --summary -> creates an additional summary file summarizing hits per TFBS, global TFBS hit rate, etc. (NOT YET IMPLEMENTED)
 
 # OUTPUT:
-  # de novo output file with columns "unique_id", "chr", "pos", "ref", "alt", "tf_name", "jaspar_internal", "ref_score", "alt_score" 
-    # with ONE ROW PER TF binding event. the output file will likely have more rows than the input file (many more if score threshold is low)
+# de novo output file with columns "unique_id", "chr", "pos", "ref", "alt", "tf_name", "jaspar_internal", "ref_score", "alt_score" 
+# with ONE ROW PER TF binding event. the output file will likely have more rows than the input file (many more if score threshold is low)
 
 # documentation notes:
-  # a triple hash (### description xyz) denotes a 'section header' in the code while (# comments..) denotes a more simple comment
+# a triple hash (### description xyz) denotes a 'section header' in the code while (# comments..) denotes a more simple comment
 
 ### dependencies
 library(optparse)
@@ -103,10 +103,9 @@ rel_positions = rep(m+1, sum(hits_per_de_novo))
 ref = as.character(rep(dn$ref, hits_per_de_novo))
 alt = as.character(rep(dn$alt, hits_per_de_novo))
 
-scores <- mapply(binding_change, r, rel_positions, ref, ref, MoreArgs = list("min.score" = "95%"))
+scores <- mapply(binding_change, r, rel_positions, ref, alt, MoreArgs = list("min.score" = "95%"))
 scores <- t(scores)  # flip to columns (ref_score, alt_score)
-names(scores)
-  
+
 ### reformat the results into annotated de novo output file and exit
 # results will have similar form as input with additional columns and additional rows where a de novo hits more than one TF binding site
 # unique_id, chr, pos, ref, alt, tfbs_name, jaspar_internal, ref_score, alt_score
@@ -131,8 +130,3 @@ if ( args$verbose ) { write(sprintf("Total number of predicted TFBS perturbation
 write.table(annotated_dn, file = paste0(args$out, "/JASPAR_tfbs_annotated_de_novos.txt"), row.names = FALSE, sep = "\t", col.names = TRUE)
 
 if ( args$verbose ) { write(sprintf("Finished!"), stderr()) }
-
-
-
-
-
