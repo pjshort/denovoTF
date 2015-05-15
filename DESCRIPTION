@@ -1,0 +1,16 @@
+Package: denovo_TF
+Type: Package
+Title: Predict TF binding and change in binding affinity for de novo non-coding mutations.
+Version: 1.0
+Date: 2015-05-14
+Author: Patrick Short
+Maintainer: <pjs90@cam.ac.uk>
+Description: Scan a list of (human) de novo mutations and return all predicted binding motifs containing the de novo
+and the change in binding affinity as a result of the de novo. Optionally, use the mutated sequence to scan for 'gain of function' TF binding.
+Imports:
+    biomaRt,
+    Biostrings,
+    TFBSTools,
+    JASPAR2014,
+    optparse
+License: What license is it under?
