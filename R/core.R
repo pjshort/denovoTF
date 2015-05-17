@@ -74,29 +74,34 @@ gain_of_binding_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score
   
   # TODO: alter so rel_pos can be a range instead of a point!
   
-  alt_seq = get_alt_sequence(ref_seq, rel_pos, ref, alt)
+  alt_seq = get_alt_sequence(ref_seq, rel_pos, alt)
   
   # scan against all PWMs with the reference sequence and alt (after mutation)
+  # the only differences between scan results should be as due to a change in binding affinity due to the mutation
   ref_results = single_sequence_coverage(ref_seq, rel_pos, pwm_list, min.score = min.score)
   alt_results = single_sequence_coverage(alt_seq, rel_pos, pwm_list, min.score = min.score)
+  alt_results = alt_results[!(names(alt_results) %in% names(ref_results))] # only the binding events NOT already spotted in ref
   
-  # the only differences between scan results should be as due to a change in binding affinity due to the mutation
-
-  ref_pwms = names(ref_results)
-  alt_pwms = names(alt_results)
+  # accounts for one de novo hitting same TF binding motif twice
+  n_ref_bindings = sapply(ref_results, length)
+  n_alt_bindings = sapply(alt_results, length)
   
-  #TODO: PICK UP HERE BELOW!!!
+  # scan ref_pwms for change due to mutation (alt) - tag with LOB if score decreases and GOB if score increases
+  ref_binding_change = sapply(ref_results, function(r) binding_change(r, rel_pos, ref, alt))
+  ref_binding_change = do.call(rbind, ref_binding_change)
   
-  # scan ref_pwms for change due to alt - tag with PERT if in alt_pwms and LOB if not in alt_pwms
-  LOB = ref_results[!(ref_pwms %in% alt_pwms)]
-  binding_change_scores = sapply(LOB, function(r) binding_change(r, rel_pos, ref, alt))
+  # look at score change for alt_results - these must be higher in alt and lower score in ref (below min.score threshold)
+  # note, the score output will be transposed! (alt_score, ref_score)
+  # TODO: why is this output type different from above??
+  alt_binding_change = sapply(alt_results, function(r) binding_change(r, rel_pos, alt, ref))
   
-  # look at GOB alts and see what ref score would have been - tag with GOB
-  GOB = sapply(LOB, function(r) binding_change(r, rel_pos, alt, ref))  # note, the score output will be transposed! (alt_score, ref_score)
+  all_names = c(rep(names(ref_results), n_ref_bindings), rep(names(alt_results), n_alt_bindings))
+  binding_changes = data.frame("jaspar_internal" = all_names, 
+                               "ref_score" = c(ref_binding_change[,1], alt_binding_change[2,]),
+                               "alt_score" = c(ref_binding_change[,2], alt_binding_change[1,]))
+  binding_changes$result = ifelse(binding_changes$ref_score > binding_changes$alt_score, "LOSS", "GAIN")
   
-  # pick up here with PERTs
-  
-  return(list("GOB" = alt_results[!(alt_pwms %in% ref_pwms)], "LOB" = ref_results[!(ref_pwms %in% alt_pwms)]))
+  return(binding_changes)
   
 }
 

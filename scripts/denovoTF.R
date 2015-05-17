@@ -118,7 +118,7 @@ alt = as.character(rep(dn$alt, total_hits_per_de_novo))
 # take each de novo and split each SiteSet into two if necessary
 unique_events <- unlist(sapply(unlist(r), function(s) split_site_set(s)))
 
-scores <- mapply(binding_change, unique_events, rel_positions, ref, alt, MoreArgs = list("min.score" = "95%"))
+scores <- mapply(binding_change, unique_events, rel_positions, ref, alt, MoreArgs = list("min.score" = args$min_score))
 s <- t(scores)  # flip to columns (ref_score, alt_score)
 
 ### reformat the results into annotated de novo output file and exit
