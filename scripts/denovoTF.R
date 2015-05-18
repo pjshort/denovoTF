@@ -138,6 +138,6 @@ if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nr
 if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", length(hits_per_de_novo_per_TFBS), stderr())) }
 if ( args$verbose ) { write(sprintf("Total number of predicted TFBS perturbation: %i", nrow(annotated_dn), stderr())) }
 
-write.table(annotated_dn, file = paste0(args$out, row.names = FALSE, sep = "\t", col.names = TRUE))
+write.table(annotated_dn, file = paste0(args$out, row.names = FALSE, sep = "\t", col.names = TRUE, quote = FALSE))
 
 if ( args$verbose ) { write(sprintf("Finished!"), stderr()) }
