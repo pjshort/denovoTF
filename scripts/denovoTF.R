@@ -23,7 +23,6 @@ library(JASPAR2014)
 
 source("../R/core.R")
 
-
 ### command line options
 option_list <- list(
   make_option("--de_novos", default="../data/DDD_noncoding_for_denovoTF.txt",
@@ -120,7 +119,7 @@ rel_pos = m+1
 # take each de novo and split each SiteSet into two if necessary
 unique_events <- unlist(sapply(unlist(r), function(s) split_site_set(s)))
 
-scores <- mapply(binding_change, unique_events, rel_pos, ref, alt, MoreArgs = list("min.score" = args$min_score))
+scores <- mapply(binding_change, unique_events, rel_pos, dn$ref, dn$alt, MoreArgs = list("min.score" = args$min_score))
 s <- t(scores)  # flip to columns (ref_score, alt_score)
 
 ### reformat the results into annotated de novo output file and exit
