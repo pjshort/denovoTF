@@ -41,8 +41,7 @@ args <- parse_args(OptionParser(option_list=option_list))
 
 ### check that the input file has columns "unique_id", "chr", "pos", "ref", "alt". if no "unique_id", create one
 
-dn <- read.table(args$de_novos, sep = " ", header = TRUE)
-de_novos <- dn[1:20,]
+de_novos <- read.table(args$de_novos, sep = " ", header = TRUE)
 
 # remove indels from de novo file - TODO: add support to analyze indels
 de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
@@ -119,7 +118,7 @@ rel_pos = m+1
 # take each de novo and split each SiteSet into two if necessary
 unique_events <- unlist(sapply(unlist(r), function(s) split_site_set(s)))
 
-scores <- mapply(binding_change, unique_events, rel_pos, dn$ref, dn$alt, MoreArgs = list("min.score" = args$min_score))
+scores <- mapply(binding_change, unique_events, rel_pos, as.character(dn$ref), as.character(dn$alt), MoreArgs = list("min.score" = args$min_score))
 s <- t(scores)  # flip to columns (ref_score, alt_score)
 
 ### reformat the results into annotated de novo output file and exit
