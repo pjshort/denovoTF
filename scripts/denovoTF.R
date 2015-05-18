@@ -134,8 +134,8 @@ alt_score <- s[,2]
 # create annotated de novo data frame (annotated_dn)
 annotated_dn <- cbind(dn, tfbs_name, jaspar_internal, ref_score, alt_score)
 
-if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(dn)), stderr()) }
-if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", sum(hits_per_de_novo_per_TFBS > 0), stderr())) }
+if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(de_novos)), stderr()) }
+if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", length(hits_per_de_novo_per_TFBS), stderr())) }
 if ( args$verbose ) { write(sprintf("Total number of predicted TFBS perturbation: %i", nrow(annotated_dn), stderr())) }
 
 write.table(annotated_dn, file = paste0(args$out, row.names = FALSE, sep = "\t", col.names = TRUE))
