@@ -29,7 +29,7 @@ option_list <- list(
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
   make_option("--tf_list", default=FALSE,
               help="Pass a list of TFs to be run against regions."),
-  make_option("--out", default="../results/",
+  make_option("--out", default="../results/JASPAR_tfbs_annotated_de_novos.txt",
               help="Set location to save the output of JASPAR-annotated de novos."),
   make_option("--min_score", default="95%",
               help="Set min score for the JASPAR annotations - less than 95% may yield unrealistic number of predicted binding sites."),
@@ -135,9 +135,9 @@ alt_score <- s[,2]
 annotated_dn <- cbind(dn, tfbs_name, jaspar_internal, ref_score, alt_score)
 
 if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(dn)), stderr()) }
-if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", sum(hits_per_de_novo > 0), stderr())) }
+if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", sum(hits_per_de_novo_per_TFBS > 0), stderr())) }
 if ( args$verbose ) { write(sprintf("Total number of predicted TFBS perturbation: %i", nrow(annotated_dn), stderr())) }
 
-write.table(annotated_dn, file = paste0(args$out, "/JASPAR_tfbs_annotated_de_novos.txt"), row.names = FALSE, sep = "\t", col.names = TRUE)
+write.table(annotated_dn, file = paste0(args$out, row.names = FALSE, sep = "\t", col.names = TRUE))
 
 if ( args$verbose ) { write(sprintf("Finished!"), stderr()) }
