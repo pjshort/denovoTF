@@ -38,7 +38,6 @@ option_list <- list(
 )
 
 args <- parse_args(OptionParser(option_list=option_list))
-args$de_novos = "../data/simulation/simulated_dn.1.txt"
 ### check that the input file has columns "unique_id", "chr", "pos", "ref", "alt". if no "unique_id", create one
 
 de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE)

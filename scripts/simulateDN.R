@@ -53,7 +53,7 @@ attach("../data/sequence_probabilities.out")
 # create large data frame with columns
 sim_out = lapply(seq(1, args$iterations), function(i) simulate_de_novos(regions, seq_probabilities, args$n_snps, i))
 sim_df = do.call(rbind, sim_out)
-sim_df = sim_df[,c("chr", "pos", "iteration")]
+sim_df = sim_df[,c("chr", "pos", "ref", "alt", "iteration")]
 
 bkp = seq(0, args$iterations, length.out = args$n_chunks + 1)
 
