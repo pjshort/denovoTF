@@ -31,7 +31,9 @@ option_list <- list(
   make_option("--n_chunks", default=100, help = "Number of smaller files to split simulated data into (for parallel processing)"),
   make_option("--base_name", default="../data/simulated_dn", help = "Directory to save the chunks (if needed)."),
   make_option("--regions", default="../data/DDD_well_cov_regions.txt",
-              help="Set location to save the output of JASPAR-annotated de novos.")
+              help="Set location to save the output of JASPAR-annotated de novos."),
+  make_option("--verbose", action="store_true", default=FALSE,
+              help="Print extra output advising the user of progression through the code.")
 )
 
 args <- parse_args(OptionParser(option_list=option_list))
@@ -40,6 +42,8 @@ args <- parse_args(OptionParser(option_list=option_list))
 regions <- read.table(args$regions, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 regions$region_id <- paste(regions$chr, regions$start, regions$stop, sep = ".")
 regions$seq = as.character(get_sequence(regions$chr, regions$start, regions$stop))
+
+if ( args$verbose ) { write("Computing per-base mutation probability for all of the genomic regions that were passed. This may take a little while...", stderr()) }
 
 # get probability of mutation per region and probability of selecting each region (prop of total probability)
 regions$p_snp_null <- sapply(regions$seq, p_sequence)
@@ -50,12 +54,16 @@ regions$p_relative <- regions$p_snp_null/sum(regions$p_snp_null)
 #save(seq_probabilities, file = "../data/sequence_probabilities.out")
 attach("../data/sequence_probabilities.out")
 
+if ( args$verbose ) { write("Simulating de novos drawn from null distribution over regions...", stderr()) }
+
 # create large data frame with columns
 sim_out = lapply(seq(1, args$iterations), function(i) simulate_de_novos(regions, seq_probabilities, args$n_snps, i))
 sim_df = do.call(rbind, sim_out)
 sim_df = sim_df[,c("chr", "pos", "ref", "alt", "iteration")]
 
 bkp = seq(0, args$iterations, length.out = args$n_chunks + 1)
+
+if ( args$verbose ) { write("Saving simulation files in chunks - feed these to denovoTF to annotate with TF binding predictions.", stderr()) }
 
 if (args$n_chunks != 1){
   for (i in seq(1, args$n_chunks)){
