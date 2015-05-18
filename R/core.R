@@ -94,8 +94,14 @@ gain_of_binding_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score
   # note, the score output will be transposed! (alt_score, ref_score)
   # TODO: why is this output type different from above??
   alt_binding_change = sapply(alt_results, function(r) binding_change(r, rel_pos, alt, ref))
-  
+  alt_binding_change = do.call(rbind, alt_binding_change)
+
+  # TODO pick up here
+
   all_names = c(rep(names(ref_results), n_ref_bindings), rep(names(alt_results), n_alt_bindings))
+  ref_scores = c(ref_binding_change[,1], alt_binding_change[2,])
+  alt_scores = c(ref_binding_change[,2], alt_binding_change[1,])
+  
   binding_changes = data.frame("jaspar_internal" = all_names, 
                                "ref_score" = c(ref_binding_change[,1], alt_binding_change[2,]),
                                "alt_score" = c(ref_binding_change[,2], alt_binding_change[1,]))

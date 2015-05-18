@@ -26,7 +26,7 @@ source("../R/core.R")
 
 ### command line options
 option_list <- list(
-  make_option("--de_novos", default="../data/de_novo_filtered.txt",
+  make_option("--de_novos", default="../data/DDD_noncoding_for_denovoTF.txt",
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
   make_option("--tf_list", default=FALSE,
               help="Pass a list of TFs to be run against regions."),
@@ -42,7 +42,8 @@ args <- parse_args(OptionParser(option_list=option_list))
 
 ### check that the input file has columns "unique_id", "chr", "pos", "ref", "alt". if no "unique_id", create one
 
-de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE)
+dn <- read.table(args$de_novos, sep = " ", header = TRUE)
+de_novos <- dn[1:20,]
 
 # remove indels from de novo file - TODO: add support to analyze indels
 de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
@@ -111,14 +112,15 @@ if ( args$verbose ) { write(sprintf("Analyzing change in information content for
 # which perturb multiple motifs
 r = scanned_regions[hits_TFBS]
 dn <- de_novos[hits_TFBS, ]
-rel_positions = rep(m+1, sum(total_hits_per_de_novo))
-ref = as.character(rep(dn$ref, total_hits_per_de_novo))
-alt = as.character(rep(dn$alt, total_hits_per_de_novo))
+
+# repeat rows of input de novos based on number of TFBS hits to report
+dn <- dn[rep(seq(nrow(dn)), total_hits_per_de_novo), ]
+rel_pos = m+1
 
 # take each de novo and split each SiteSet into two if necessary
 unique_events <- unlist(sapply(unlist(r), function(s) split_site_set(s)))
 
-scores <- mapply(binding_change, unique_events, rel_positions, ref, alt, MoreArgs = list("min.score" = args$min_score))
+scores <- mapply(binding_change, unique_events, rel_pos, ref, alt, MoreArgs = list("min.score" = args$min_score))
 s <- t(scores)  # flip to columns (ref_score, alt_score)
 
 ### reformat the results into annotated de novo output file and exit
@@ -126,17 +128,13 @@ s <- t(scores)  # flip to columns (ref_score, alt_score)
 # unique_id, chr, pos, ref, alt, tfbs_name, jaspar_internal, ref_score, alt_score
 
 # process remaining columns for data frame
-unique_id <- rep(dn$unique_id, total_hits_per_de_novo)
-chr <- rep(dn$chr, total_hits_per_de_novo)
-pos <- rep(dn$pos, total_hits_per_de_novo)
 tfbs_name <- unlist(sapply(unique_events, function(s) s@pattern@name))
 jaspar_internal <- unlist(sapply(unique_events, function(s) s@pattern@ID))
 ref_score <- s[,1]
 alt_score <- s[,2]
 
-# create annotated de novo data frame
-annotated_dn <- data.frame(unique_id, chr, pos, ref, alt, tfbs_name, jaspar_internal, ref_score, alt_score)
-rownames(annotated_dn) <- NULL
+# create annotated de novo data frame (annotated_dn)
+annotated_dn <- cbind(dn, tfbs_name, jaspar_internal, ref_score, alt_score)
 
 if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(dn)), stderr()) }
 if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", sum(hits_per_de_novo > 0), stderr())) }
