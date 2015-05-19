@@ -28,8 +28,10 @@ source("../R/mutation_null_model.R")
 option_list <- list(
   make_option("--n_snps", default=453,
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
-  make_option("--iterations", default=1000, help="Set the number of simulation outputs to generate."),
-  make_option("--n_chunks", default=100, help = "Number of smaller files to split simulated data into (for parallel processing)"),
+  make_option("--n_probands", default=425,
+              help="Number of probands which should be simulated (this can be used to simulate diagnosed/undiagnosed effects)."),
+  make_option("--iterations", default=10, help="Set the number of simulation outputs to generate."),
+  make_option("--n_chunks", default=2, help = "Number of smaller files to split simulated data into (for parallel processing)"),
   make_option("--base_name", default="../data/simulated_dn", help = "Directory to save the chunks (if needed)."),
   make_option("--regions", default="../data/DDD_well_cov_regions.txt",
               help="Set location to save the output of JASPAR-annotated de novos."),
@@ -51,16 +53,16 @@ regions$p_snp_null <- sapply(regions$seq, p_sequence)
 regions$p_relative <- regions$p_snp_null/sum(regions$p_snp_null)
 
 # TODO: write way to pre-process this step...
-#seq_probabilities = relative_seq_probabilities(well_covered_regions) # run these two lines to regenerate
+#seq_probabilities = relative_seq_probabilities(regions) # run these two lines to regenerate
 #save(seq_probabilities, file = "../data/sequence_probabilities.out")
 attach("../data/sequence_probabilities.out")
 
 if ( args$verbose ) { write("Simulating de novos drawn from null distribution over regions...", stderr()) }
 
 # create large data frame with columns
-sim_out = lapply(seq(1, args$iterations), function(i) simulate_de_novos(regions, seq_probabilities, args$n_snps, i))
+sim_out = lapply(seq(1, args$iterations), function(i) simulate_de_novos(regions, seq_probabilities, args$n_snps, args$n_probands, i))
 sim_df = do.call(rbind, sim_out)
-sim_df = sim_df[,c("chr", "pos", "ref", "alt", "iteration")]
+sim_df = sim_df[,c("person_stable_id", "chr", "pos", "ref", "alt", "iteration")]
 
 bkp = seq(0, args$iterations, length.out = args$n_chunks + 1)
 

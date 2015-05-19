@@ -8,12 +8,22 @@ relative_seq_probabilities <- function(regions){
   return(seq_probabilities)
 }
 
-simulate_de_novos <- function(regions, seq_probabilities, snp_total, iteration) {
+simulate_de_novos <- function(regions, seq_probabilities, n_snps, n_probands, iteration) {
   
   # takes vector of region_ids to consider, list matching region_id to sequence relative probability, and total snps to simulate
-  # samples snp_total region ids (with replacement). for each region, specific relative position will be randomly sampled
+  # samples n_snps region ids (with replacement). for each region, specific relative position will be randomly sampled
   
-  region_ids = sample(regions$region_id, snp_total, replace = TRUE, prob = regions$p_relative)
+  region_ids = sample(regions$region_id, n_snps, replace = TRUE, prob = regions$p_relative)
+  
+  if (n_probands < n_snps) { # TODO: think if this is the best way to sample... seems reasonable to automatically assign one de novo per prband because if they are observed,
+    # then they must have at least one de novo... sampling naively creates a distribution that does not match the observed one where n_probands slightly less than n_snps
+    proband_ids1 = paste0("sim_person_id_", sample(seq(n_probands), n_probands, replace = FALSE)) # assign one snp to each proband
+    proband_ids2 = paste0("sim_person_id_", sample(seq(n_probands), n_snps - n_probands, replace = TRUE)) # assign remaining snps
+    proband_ids = c(proband_ids1, proband_ids2)
+  } else {
+    proband_ids = paste0("sim_person_id_", sample(seq(n_probands), n_snps, replace = TRUE)) # assign remaining snps
+  }
+  
   rel_pos = sapply(as.character(region_ids), function(id) sample(seq(1,length(seq_probabilities[id][[1]])), 1, prob = seq_probabilities[id][[1]]))
   coords = do.call(rbind, strsplit(region_ids, "\\.")) # chr, start, stop
   pos = as.integer(coords[,2]) + as.integer(rel_pos)
@@ -30,7 +40,7 @@ simulate_de_novos <- function(regions, seq_probabilities, snp_total, iteration) 
   ref = as.character(sapply(ref_tri, function(s) substr(s,2,2)))
   alt = as.character(sapply(ref_tri, sample_alt))
   
-  sim_dn = data.frame("chr" = coords[,1], "pos" = pos, "ref" = ref, "alt" = alt, "iteration" = iteration)
+  sim_dn = data.frame("person_stable_id" = proband_ids, "chr" = coords[,1], "pos" = pos, "ref" = ref, "alt" = alt, "iteration" = iteration)
   
   return(sim_dn)  # data frame
 }
