@@ -39,13 +39,13 @@ option_list <- list(
 )
 
 args <- parse_args(OptionParser(option_list=option_list))
-### check that the input file has columns "unique_id", "chr", "pos", "ref", "alt". if no "unique_id", create one
 
 de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
 # remove indels from de novo file - TODO: add support to analyze indels
 de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
 
+# check that the input file has columns "unique_id", "chr", "pos", "ref", "alt". if no "unique_id", create one
 reqd_columns <- c("chr", "pos", "ref", "alt")
 
 # throw error if any required column is missing

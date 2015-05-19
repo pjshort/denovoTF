@@ -109,9 +109,7 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
   all_names = c(rep(names(ref_results), n_ref_bindings), rep(names(alt_results), n_alt_bindings))
   
   if (length(all_names) == 0) { # no binding results for ref or alt
-    
     return( NULL )
-    
   }
   
   if (length(names(ref_results)) > 0 & length(names(alt_results)) > 0) { 
@@ -119,11 +117,11 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
                                "ref_score" = c(ref_binding_change[,1], alt_binding_change[,2]),
                                "alt_score" = c(ref_binding_change[,2], alt_binding_change[,1]))
   } else if (length(names(ref_results)) > 0) { # only binding for ref sequence
-    binding_changes = data.frame("jaspar_internal" = names(ref_results), 
+    binding_changes = data.frame("jaspar_internal" = rep(names(ref_results), n_ref_bindings), 
                                  "ref_score" = ref_binding_change[,1],
                                  "alt_score" = ref_binding_change[,2])
   } else { # only binding for alt sequence
-    binding_changes = data.frame("jaspar_internal" = names(alt_results), 
+    binding_changes = data.frame("jaspar_internal" = rep(names(alt_results), n_alt_bindings), 
                                  "ref_score" = alt_binding_change[,2],
                                  "alt_score" = alt_binding_change[,1])
   }
