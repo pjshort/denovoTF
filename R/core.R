@@ -113,6 +113,9 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
   }
   
   if (length(names(ref_results)) > 0 & length(names(alt_results)) > 0) { 
+    if (length(all_names) != length(c(ref_binding_change[,1], alt_binding_change[,2]))){
+      cat(ref_seq)
+    }
     binding_changes = data.frame("jaspar_internal" = all_names, 
                                "ref_score" = c(ref_binding_change[,1], alt_binding_change[,2]),
                                "alt_score" = c(ref_binding_change[,2], alt_binding_change[,1]))
