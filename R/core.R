@@ -90,21 +90,13 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
   n_alt_bindings = sapply(alt_results, length) # these are actually only the alts that are true GOB (i.e. don't show up in ref)
   
   # scan ref_pwms for change due to mutation (alt) - tag with LOB if score decreases and GOB if score increases
-  ref_binding_change = sapply(ref_results, function(r) binding_change(r, rel_pos, ref, alt))
-  if (typeof(ref_binding_change) == "list") {
-    ref_binding_change = do.call(rbind, ref_binding_change)
-  } else {
-    ref_binding_change = t(ref_binding_change)
-  }
+  ref_binding_change = lapply(ref_results, function(r) binding_change(r, rel_pos, ref, alt))
+  ref_binding_change = do.call(rbind, ref_binding_change)
   
   # look at score change for alt_results - these must be higher in alt and lower score in ref (below min.score threshold)
   # note, the score output will be transposed! (alt_score, ref_score)
-  alt_binding_change = sapply(alt_results, function(r) binding_change(r, rel_pos, alt, ref))
-  if (typeof(ref_binding_change) == "list") {
-    alt_binding_change = do.call(rbind, alt_binding_change)
-  } else {
-    alt_binding_change = t(alt_binding_change)
-  }
+  alt_binding_change = lapply(alt_results, function(r) binding_change(r, rel_pos, alt, ref))
+  alt_binding_change = do.call(rbind, alt_binding_change)
   
   all_names = c(rep(names(ref_results), n_ref_bindings), rep(names(alt_results), n_alt_bindings))
   
@@ -114,7 +106,7 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
   
   if (length(names(ref_results)) > 0 & length(names(alt_results)) > 0) { 
     if (length(all_names) != length(c(ref_binding_change[,1], alt_binding_change[,2]))){
-      cat(ref_seq)
+      print(ref_seq)
     }
     binding_changes = data.frame("jaspar_internal" = all_names, 
                                "ref_score" = c(ref_binding_change[,1], alt_binding_change[,2]),
