@@ -39,10 +39,8 @@ option_list <- list(
 )
 
 args <- parse_args(OptionParser(option_list=option_list))
-args$de_novos = "../data/sim_data.1.txt"
 
 de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-
 
 # remove indels from de novo file - TODO: add support to analyze indels
 de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
