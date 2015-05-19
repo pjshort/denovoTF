@@ -67,12 +67,15 @@ scan_regions <- function(sequences, rel_positions, pwm_list, min.score = "95%"){
   return(scan_results)
 }
 
-gain_of_binding_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%"){
+LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%"){
   
   # input: single ref sequence, single alt sequence, list of PWMs to query, minimum binding score (optional)
   # returns: SiteSetList of original site that was passed plus any sites that were NOT found with ref (but are found with alt)
+  # stand for 'loss of binding gain of binding scan'
   
   # TODO: alter so rel_pos can be a range instead of a point!
+  
+  if (typeof(ref_seq) != "DNAString") { ref_seq = DNAString(ref_seq)}
   
   alt_seq = get_alt_sequence(ref_seq, rel_pos, alt)
   
@@ -84,28 +87,49 @@ gain_of_binding_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score
   
   # accounts for one de novo hitting same TF binding motif twice
   n_ref_bindings = sapply(ref_results, length)
-  n_alt_bindings = sapply(alt_results, length)
+  n_alt_bindings = sapply(alt_results, length) # these are actually only the alts that are true GOB (i.e. don't show up in ref)
   
   # scan ref_pwms for change due to mutation (alt) - tag with LOB if score decreases and GOB if score increases
   ref_binding_change = sapply(ref_results, function(r) binding_change(r, rel_pos, ref, alt))
-  ref_binding_change = do.call(rbind, ref_binding_change)
+  if (typeof(ref_binding_change) == "list") {
+    ref_binding_change = do.call(rbind, ref_binding_change)
+  } else {
+    ref_binding_change = t(ref_binding_change)
+  }
   
   # look at score change for alt_results - these must be higher in alt and lower score in ref (below min.score threshold)
   # note, the score output will be transposed! (alt_score, ref_score)
-  # TODO: why is this output type different from above??
   alt_binding_change = sapply(alt_results, function(r) binding_change(r, rel_pos, alt, ref))
-  alt_binding_change = do.call(rbind, alt_binding_change)
-
-  # TODO pick up here
-
-  all_names = c(rep(names(ref_results), n_ref_bindings), rep(names(alt_results), n_alt_bindings))
-  ref_scores = c(ref_binding_change[,1], alt_binding_change[2,])
-  alt_scores = c(ref_binding_change[,2], alt_binding_change[1,])
+  if (typeof(ref_binding_change) == "list") {
+    alt_binding_change = do.call(rbind, alt_binding_change)
+  } else {
+    alt_binding_change = t(alt_binding_change)
+  }
   
-  binding_changes = data.frame("jaspar_internal" = all_names, 
-                               "ref_score" = c(ref_binding_change[,1], alt_binding_change[2,]),
-                               "alt_score" = c(ref_binding_change[,2], alt_binding_change[1,]))
+  all_names = c(rep(names(ref_results), n_ref_bindings), rep(names(alt_results), n_alt_bindings))
+  
+  if (length(all_names) == 0) { # no binding results for ref or alt
+    
+    return( NULL )
+    
+  }
+  
+  if (length(names(ref_results)) > 0 & length(names(alt_results)) > 0) { 
+    binding_changes = data.frame("jaspar_internal" = all_names, 
+                               "ref_score" = c(ref_binding_change[,1], alt_binding_change[,2]),
+                               "alt_score" = c(ref_binding_change[,2], alt_binding_change[,1]))
+  } else if (length(names(ref_results)) > 0) { # only binding for ref sequence
+    binding_changes = data.frame("jaspar_internal" = names(ref_results), 
+                                 "ref_score" = ref_binding_change[,1],
+                                 "alt_score" = ref_binding_change[,2])
+  } else { # only binding for alt sequence
+    binding_changes = data.frame("jaspar_internal" = names(alt_results), 
+                                 "ref_score" = alt_binding_change[,2],
+                                 "alt_score" = alt_binding_change[,1])
+  }
+
   binding_changes$result = ifelse(binding_changes$ref_score > binding_changes$alt_score, "LOSS", "GAIN")
+  binding_changes$result[binding_changes$ref_score - binding_changes$alt_score == 0] = "SILENT"
   
   return(binding_changes)
   

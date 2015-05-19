@@ -72,3 +72,21 @@ test_that("single de novo hits same TFBS twice", {
   #2 ref_sequence   TFBS    TFBS    16  24 10.82021      -     . TF=TFAP2A;class=Zipper-Type;sequence=GCCCGGGGC
   
 })
+
+
+test_that("gain of binding scan works", {
+  
+  seq = "GCTAATTCCACTATTTCTTCTCTTTTAATGAGATGAGCCTGTCCTCATCTT"
+  rel_pos = 180462583 - 180462550 + 1  # relative position of de novo in sequence
+  ref = substr(seq, rel_pos, rel_pos) # T
+  alt = "C" # made up for test
+  
+  bc90 <- gain_of_binding_scan(seq, rel_pos, ref, alt, pwm_list, min.score = "90%") # returns four events (all on ref)
+  bc80 <- gain_of_binding_scan(seq, rel_pos, ref, alt, pwm_list, min.score = "80%")  # will return lots of events
+  
+  expect_equal(sum(bc90$result == "LOSS"), 2)
+  expect_equal(sum(bc90$result == "GAIN"), 0)
+  expect_equal(sum(bc90$result == "SILENT"), 2)
+  expect_equal(nrow(bc80), 23)
+
+})
