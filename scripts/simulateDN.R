@@ -27,7 +27,7 @@ source("../R/simulate.R")
 option_list <- list(
   make_option("--n_snps", default=453,
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
-  make_option("--iterations", default=500, help="Set the number of simulation outputs to generate."),
+  make_option("--iterations", default=1000, help="Set the number of simulation outputs to generate."),
   make_option("--n_chunks", default=100, help = "Number of smaller files to split simulated data into (for parallel processing)"),
   make_option("--base_name", default="../data/simulated_dn", help = "Directory to save the chunks (if needed)."),
   make_option("--regions", default="../data/DDD_well_cov_regions.txt",
