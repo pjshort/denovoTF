@@ -22,6 +22,7 @@ library(JASPAR2014)
 
 source("../R/core.R")
 source("../R/simulate.R")
+source("../R/mutation_null_model.R")
 
 ### command line options
 option_list <- list(
