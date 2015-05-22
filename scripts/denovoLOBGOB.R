@@ -41,7 +41,7 @@ option_list <- list(
 args <- parse_args(OptionParser(option_list=option_list))
 
 de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-de_novos = de_novos[1:10,]
+
 # remove indels from de novo file - TODO: add support to analyze indels
 de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
 
@@ -94,7 +94,7 @@ if ( args$verbose ) { write("Scanning sequence surrounding each de novo for pred
 
 # get TF binding per de novo
 
-scans = mapply(LOBGOB_scan, ref_seqs, m+1, as.character(de_novos$ref), as.character(de_novos$alt), MoreArgs = list("pwm_list" = pwm_list, "min.score" = args$min.score))
+scans = mapply(LOBGOB_scan, ref_seqs, m+1, as.character(de_novos$ref), as.character(de_novos$alt), MoreArgs = list("pwm_list" = pwm_list, "min.score" = args$min_score))
 # count number of hits per de novo
 hits_per_de_novo = sapply(scans, function(s) ifelse(is.null(s), 0, nrow(s)))
 
