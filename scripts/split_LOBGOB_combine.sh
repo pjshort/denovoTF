@@ -18,7 +18,7 @@ $logs/test.%I.out /software/R-3.1.2/bin/Rscript denovoLOBGOB.R \
 --out=$tmp_dir/simulated_LOBGOB.\$LSB_JOBINDEX.txt --min_score=95%
 
 # combine the results into a single large dataframe
-bsub -R'select[mem>500] rusage[mem=500]' -M500 -o $logs/generate_data.out \
-/software/R-3.1.2/bin/Rscript combine.R --n_chunks=$n_chunks --base_name=$tmp_dir/sim_data \
+bsub -R'select[mem>500] rusage[mem=500]' -M500 -o $logs/combine_data.out \
+/software/R-3.1.2/bin/Rscript combine.R --n_chunks=$n_chunks --base_name=$tmp_dir/simulated_LOBGOB \
 --out="../results/simulated_de_novos_JASPAR_tfbs_annotation.txt"
 
