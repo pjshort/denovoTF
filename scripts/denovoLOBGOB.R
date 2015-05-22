@@ -41,7 +41,7 @@ option_list <- list(
 args <- parse_args(OptionParser(option_list=option_list))
 
 de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-
+de_novos = de_novos[1:10,]
 # remove indels from de novo file - TODO: add support to analyze indels
 de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
 
@@ -93,8 +93,8 @@ ref_seqs = get_sequence(paste0("chr", de_novos$chr), de_novos$pos - m, de_novos$
 if ( args$verbose ) { write("Scanning sequence surrounding each de novo for predicted transcription factor binding event in ref and alt...", stderr()) }
 
 # get TF binding per de novo
-scans = mapply(LOBGOB_scan, ref_seqs, m+1, as.character(de_novos$ref), as.character(de_novos$alt), MoreArgs = list("pwm_list" = pwm_list, "min.score" = "95%"))
 
+scans = mapply(LOBGOB_scan, ref_seqs, m+1, as.character(de_novos$ref), as.character(de_novos$alt), MoreArgs = list("pwm_list" = pwm_list, "min.score" = args$min.score))
 # count number of hits per de novo
 hits_per_de_novo = sapply(scans, function(s) ifelse(is.null(s), 0, nrow(s)))
 
@@ -114,5 +114,3 @@ if ( args$verbose ) {
 write.table(annotated_dn, file = args$out, row.names = FALSE, sep = "\t", col.names = TRUE, quote = FALSE)
 
 if ( args$verbose ) { write(sprintf("Finished!"), stderr()) }
-
-
