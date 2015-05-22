@@ -14,11 +14,19 @@ option_list <- list(
 
 args <- parse_args(OptionParser(option_list=option_list))
 
+args$base_name = "/tmp/sim_annotated/simulated_LOBGOB"
+
 chunks = vector("list", args$n_chunks)
 for (i in seq(args$n_chunks)){
   fname = sprintf("%s.%i.txt", args$base_name, i) # will look for fname e.e.g /tmp/denovoLOBGOB_sim_chunks/sim_data.n.out for n 1-n_chunks
-  chunks[[i]] = read.table(fname, sep = "\t", header = TRUE)
+  if (file.exists(fname)){
+    chunks[[i]] = read.table(fname, sep = "\t", header = TRUE)
+  } else {
+    chunks[[i]] = NULL
+  }
 }
+
+chunks = chunks[!sapply(chunks, is.null)]
 
 annotated_sim <- do.call(rbind, chunks)
 annotated_sim$diff <- annotated_sim$ref_score - annotated_sim$alt_score
