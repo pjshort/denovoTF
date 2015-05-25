@@ -26,7 +26,7 @@ source("../R/core.R")
 
 ### command line options
 option_list <- list(
-  make_option("--de_novos", default="../data/DDD_noncoding_for_denovoTF.txt",
+  make_option("--de_novos", default="~/code/denovoTF/data/DDD_noncoding_for_denovoTF.txt",
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
   make_option("--tf_list", default=FALSE,
               help="Pass a list of TFs to be run against regions."),

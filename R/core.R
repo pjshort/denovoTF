@@ -121,8 +121,10 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
                                  "alt_score" = alt_binding_change[,1])
   }
 
-  binding_changes$result = ifelse(binding_changes$ref_score > binding_changes$alt_score, "LOSS", "GAIN")
-  binding_changes$result[binding_changes$ref_score - binding_changes$alt_score == 0] = "SILENT"
+  binding_changes$diff = binding_changes$ref_score - binding_changes$alt_score
+  
+  binding_changes$result = ifelse(binding_changes$diff > 0, "LOSS", "GAIN")
+  binding_changes$result[binding_changes$diff == 0] = "SILENT"
   
   return(binding_changes)
   

@@ -81,8 +81,11 @@ test_that("gain of binding scan works", {
   ref = substr(seq, rel_pos, rel_pos) # T
   alt = "C" # made up for test
   
-  bc90 <- gain_of_binding_scan(seq, rel_pos, ref, alt, pwm_list, min.score = "90%") # returns four events (all on ref)
-  bc80 <- gain_of_binding_scan(seq, rel_pos, ref, alt, pwm_list, min.score = "80%")  # will return lots of events
+  pwm_options = list("species" = 9606, "all_versions" = TRUE, "matrixtype" = "PWM") # 9606 = "homo sapiens"
+  pwm_list = getMatrixSet(JASPAR2014, pwm_options)
+  
+  bc90 <- LOBGOB_scan(seq, rel_pos, ref, alt, pwm_list, min.score = "90%") # returns four events (all on ref)
+  bc80 <- LOBGOB_scan(seq, rel_pos, ref, alt, pwm_list, min.score = "80%")  # will return lots of events
   
   expect_equal(sum(bc90$result == "LOSS"), 2)
   expect_equal(sum(bc90$result == "GAIN"), 0)
