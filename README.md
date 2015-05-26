@@ -5,7 +5,7 @@ The reference and alternate sequence for a list of variants (chr, pos, ref, alt)
 
 Uses JASPAR2014 database (and associated R package) is used for TF binding affinity prediction.
 
-## Getting Set UP
+## Getting Set Up
 Running build.R will install hg19 annotation (for retrieving sequence context) and install JASPAR2014 and TFBSTools Bioconductor packages.
 
 Dependencies: BSGenome, Biostrings, TFBSTools, JASPAR2014, optparse
@@ -26,4 +26,17 @@ Output file example:
 
 Any additional columns that are passed i.e. patient_is_diagnosed will be preserved.
 
+## Generating Simulation Data
+
+simulateDN.R (in scripts folder) can be use to generate simulated de novos. The random selection of location, alt allele is non-uniform - instead, it is based on a background trinucleotide mutation rate first described by Samocha et. al (http://www.nature.com/ng/journal/v46/n9/abs/ng.3050.html). For any trinucleotide, the poisson lambda parameter of a mutation at the middle base is determined by the trinucleotide mutation table (i.e. Lambda(ATG is mutated) = Lambda(ATG -> ACG) + Lambda(ATG -> AGG) + Lambda(ATG -> AAG).
+
+simulateDN.R requires:
+--n_snps -> number of snps to simulate
+--n_probands -> number of probands to assign snps to
+--regions -> regions in which the SNPs will be simulated (given by columns chr, start, stop)
+--iterations -> how many synthetic data sets to create
+--n_chunks -> number of different files to save them to
+--base_name -> base name that the chunks will have (or simply file name if only 1 chunk) e.g. --base_name=~/results/sim_data will save as ~/results/sim_data1.txt, ~/results/sim_data2.txt ...
+
+--n_chunks will only be useful if you plan to do annotation in parallel (which is advised if a cluster is available). 1000 iterations in a single file with 453 snps in 425 probands is approximately 16MB in size. The output file will have an 'iterations' column that can be used to split the data for comparing with a observations from real data, for instance.
 
