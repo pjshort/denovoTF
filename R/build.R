@@ -6,6 +6,7 @@ biocLite("BSgenomes")
 biocLite("BSgenome.Hsapiens.UCSC.hg19") # load the hg19 genome build - takes a little while as it is approx. 800 MB
 biocLite("TFBSTools")
 biocLite("JASPAR2014")
+install.packages("optparse")
 library(TFBSTools)
 library(JASPAR2014)
 
