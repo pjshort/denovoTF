@@ -5,6 +5,10 @@ The reference and alternate sequence for a list of variants (chr, pos, ref, alt)
 
 Uses JASPAR2014 database (and associated R package) is used for TF binding affinity prediction.
 
+```
+Rscript denovoLOBGOB.R --de_novos=/path/to/denovos --min_score=95% --verbose --out=/path/to/annotated_denovos
+```
+
 ## Getting Set Up
 Running build.R will install hg19 annotation (for retrieving sequence context) and install JASPAR2014 and TFBSTools Bioconductor packages.
 
@@ -37,6 +41,10 @@ simulateDN.R requires:
 --iterations -> how many synthetic data sets to create
 --n_chunks -> number of different files to save them to
 --base_name -> base name that the chunks will have (or simply file name if only 1 chunk) e.g. --base_name=~/results/sim_data will save as ~/results/sim_data1.txt, ~/results/sim_data2.txt ...
+
+```
+Rscript simulateDN.R --n_snps=200 --n_probands=150 --regions=/path/to/regions --iterations=10 --n_chunks=2 --base_name=/path/to/chunk --verbose
+```
 
 --n_chunks will only be useful if you plan to do annotation in parallel (which is advised if a cluster is available). 1000 iterations in a single file with 453 snps in 425 probands is approximately 16MB in size. The output file will have an 'iterations' column that can be used to split the data for comparing with a observations from real data, for instance.
 
