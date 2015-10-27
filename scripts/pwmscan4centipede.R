@@ -90,62 +90,28 @@ names(seqs) = de_novos$unique_id
 
 if ( args$verbose ) { write("Scanning sequence surrounding each de novo for predicted transcription factor binding event...", stderr()) }
 
-rel_positions <- rep(m+1, length(seqs)) # relative position should be the middle of each seq object (max motif length +1)
-scanned_regions <- scan_regions(seqs, rel_positions, pwm_list, min.score = args$min_score)
+scans = mapply(LOBGOB_scan, ref_seqs, m+1, as.character(de_novos$ref), as.character(de_novos$alt), MoreArgs = list("pwm_list" = pwm_list, "min.score" = args$min_score))
+# count number of hits per de novo
+hits_per_de_novo = sapply(scans, function(s) ifelse(is.null(s), 0, nrow(s)))
+hits_TFBS = hits_per_de_novo > 0
 
-print(length(scanned_regions))
-
-# check whether scanned region hits any TFBS
-hits_TFBS <- sapply(scanned_regions, length) > 0
-
-# count the number of times EACH TFBS is hit by the de novo - almost all the time this will be one (but not at always)
-hits_per_de_novo_per_TFBS <- sapply(scanned_regions[hits_TFBS], function(s) sapply(s, length))
-
-print(length(hits_per_de_novo_per_TFBS))
-
-# total disruptions per de novo
-total_hits_per_de_novo <- sapply(hits_per_de_novo_per_TFBS, sum)
-
-print(length(total_hits_per_de_novo))
+# rbind the dataframes from scans
+scores = do.call(rbind, scans)
+tfbs_name = sapply(scores$jaspar_internal, function(j) pwm_list[j][[1]]@name)
+scores = cbind(tfbs_name, scores)
 
 ### calculate the increase/decrease in binding affinity
 if ( args$verbose ) { write(sprintf("Analyzing change in information content for ref vs. alt on predicting TF binding events..."), stderr()) }
 
-# flatten the list of hits - used rep with hits_per_de_denovo to repeat alt and ref allele as much as necessary for de novos
-# which perturb multiple motifs
-r = scanned_regions[hits_TFBS]
-dn <- de_novos[hits_TFBS, ]
+# combine de novo IDs and scores
+annotated_dn = cbind(de_novos[rep(seq(nrow(de_novos)), hits_per_de_novo),], scores)
 
-print(nrow(dn))
-
-# repeat rows of input de novos based on number of TFBS hits to report
-dn <- dn[rep(seq(nrow(dn)), total_hits_per_de_novo), ]
-rel_pos = m+1
-
-# take each de novo and split each SiteSet into two if necessary
-unique_events <- unlist(sapply(unlist(r), function(s) split_site_set(s)))
-
-scores <- mapply(binding_change, unique_events, rel_pos, as.character(dn$ref), as.character(dn$alt), MoreArgs = list("min.score" = args$min_score))
-s <- t(scores)  # flip to columns (ref_score, alt_score)
-
-### reformat the results into annotated de novo output file and exit
-# results will have similar form as input with additional columns and additional rows where a de novo hits more than one TF binding site
-# unique_id, chr, pos, ref, alt, tfbs_name, jaspar_internal, ref_score, alt_score
-
-# process remaining columns for data frame
-tfbs_name <- unlist(sapply(unique_events, function(s) s@pattern@name))
-jaspar_internal <- unlist(sapply(unique_events, function(s) s@pattern@ID))
-ref_score <- s[,1]
-alt_score <- s[,2]
-
-motif_start = dn$pos + unlist(sapply(unique_events, function(s) s@views@ranges@start - rel_pos))
-motif_end = dn$pos + unlist(sapply(unique_events, function(s) s@views@ranges@start + s@views@ranges@width - 1 - rel_pos))
-strand = unlist(sapply(unique_events, function(s) s@strand))
+motif_start = annotated_dn$pos + unlist(sapply(scores, function(s) s@views@ranges@start - rel_pos))
+motif_end = annotated_dn$pos + unlist(sapply(scores, function(s) s@views@ranges@start + s@views@ranges@width - 1 - rel_pos))
+strand = unlist(sapply(scores, function(s) s@strand))
 
 # create annotated de novo data frame (annotated_dn)
 annotated_dn <- cbind(dn, tfbs_name, jaspar_internal, ref_score, alt_score, motif_start, motif_end, strand)
-
-print(nrow(annotated_dn))
 
 if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(de_novos)), stderr()) }
 if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", length(hits_per_de_novo_per_TFBS), stderr())) }
