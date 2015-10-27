@@ -93,14 +93,20 @@ if ( args$verbose ) { write("Scanning sequence surrounding each de novo for pred
 rel_positions <- rep(m+1, length(seqs)) # relative position should be the middle of each seq object (max motif length +1)
 scanned_regions <- scan_regions(seqs, rel_positions, pwm_list, min.score = args$min_score)
 
+print(length(scanned_regions))
+
 # check whether scanned region hits any TFBS
 hits_TFBS <- sapply(scanned_regions, length) > 0
 
 # count the number of times EACH TFBS is hit by the de novo - almost all the time this will be one (but not at always)
-hits_per_de_novo_per_TFBS <- sapply(scanned_regions[hits_TFBS > 0], function(s) sapply(s, length))
+hits_per_de_novo_per_TFBS <- sapply(scanned_regions[hits_TFBS], function(s) sapply(s, length))
+
+print(length(hits_per_de_novo_per_TFBS))
 
 # total disruptions per de novo
 total_hits_per_de_novo <- sapply(hits_per_de_novo_per_TFBS, sum)
+
+print(length(total_hits_per_de_novo))
 
 ### calculate the increase/decrease in binding affinity
 if ( args$verbose ) { write(sprintf("Analyzing change in information content for ref vs. alt on predicting TF binding events..."), stderr()) }
@@ -109,6 +115,8 @@ if ( args$verbose ) { write(sprintf("Analyzing change in information content for
 # which perturb multiple motifs
 r = scanned_regions[hits_TFBS]
 dn <- de_novos[hits_TFBS, ]
+
+print(nrow(dn))
 
 # repeat rows of input de novos based on number of TFBS hits to report
 dn <- dn[rep(seq(nrow(dn)), total_hits_per_de_novo), ]
@@ -136,6 +144,8 @@ strand = unlist(sapply(unique_events, function(s) s@strand))
 
 # create annotated de novo data frame (annotated_dn)
 annotated_dn <- cbind(dn, tfbs_name, jaspar_internal, ref_score, alt_score, motif_start, motif_end, strand)
+
+print(nrow(annotated_dn))
 
 if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(de_novos)), stderr()) }
 if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", length(hits_per_de_novo_per_TFBS), stderr())) }
