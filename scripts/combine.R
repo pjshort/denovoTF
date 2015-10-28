@@ -26,7 +26,6 @@ for (i in seq(args$n_chunks)){
 
 chunks = chunks[!sapply(chunks, is.null)]
 
-annotated_simannotated_sim$diff <- annotated_sim$ref_score - annotated_sim$alt_score
 df <- do.call(rbind, chunks)
 
 write.table(df, file = args$out, quote=FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
