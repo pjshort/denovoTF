@@ -83,8 +83,8 @@ max_motif_length = max(sapply(pwm_list, function(t) ncol(t@profileMatrix)))
 if ( args$verbose ) { write("Getting sequence context for each de novo...", stderr()) }
 
 m = max_motif_length
-seqs = get_sequence(paste0("chr", de_novos$chr), de_novos$pos - m, de_novos$pos + m)
-names(seqs) = de_novos$unique_id
+ref_seqs = get_sequence(paste0("chr", de_novos$chr), de_novos$pos - m, de_novos$pos + m)
+names(ref_seqs) = de_novos$unique_id
 
 ### scan every sequence against the full JASPAR list and keep track of any binding events that intersect with the de novo position.
 
@@ -106,12 +106,9 @@ if ( args$verbose ) { write(sprintf("Analyzing change in information content for
 # combine de novo IDs and scores
 annotated_dn = cbind(de_novos[rep(seq(nrow(de_novos)), hits_per_de_novo),], scores)
 
-motif_start = annotated_dn$pos + unlist(sapply(scores, function(s) s@views@ranges@start - rel_pos))
-motif_end = annotated_dn$pos + unlist(sapply(scores, function(s) s@views@ranges@start + s@views@ranges@width - 1 - rel_pos))
-strand = unlist(sapply(scores, function(s) s@strand))
-
-# create annotated de novo data frame (annotated_dn)
-annotated_dn <- cbind(dn, tfbs_name, jaspar_internal, ref_score, alt_score, motif_start, motif_end, strand)
+# annotated_dn motif start is determined in LOBGOB_scan as relative to de novo position
+annotated_dn$motif_start = annotated_dn$motif_start + annotated_dn$pos
+annotated_dn$motif_end = annotated_dn$motif_end + annotated_dn$pos
 
 if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(de_novos)), stderr()) }
 if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", length(hits_per_de_novo_per_TFBS), stderr())) }
