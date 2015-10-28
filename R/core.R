@@ -138,9 +138,9 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
     binding_changes = data.frame("jaspar_internal" = rep(names(alt_results), n_alt_bindings), 
                                  "ref_score" = alt_binding_change[,2],
                                  "alt_score" = alt_binding_change[,1],
-                                 "motif_start" = as.numeric(ref_binding_change[,3]),
-                                 "motif_end" = as.numeric(ref_binding_change[,4]),
-                                 "strand" = ref_binding_change[,5])
+                                 "motif_start" = as.numeric(alt_binding_change[,3]),
+                                 "motif_end" = as.numeric(alt_binding_change[,4]),
+                                 "strand" = alt_binding_change[,5])
   }
 
   binding_changes$diff = as.numeric(binding_changes$ref_score) - as.numeric(binding_changes$alt_score)
