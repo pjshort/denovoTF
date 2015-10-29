@@ -111,8 +111,8 @@ annotated_dn$motif_start = annotated_dn$motif_start + annotated_dn$pos
 annotated_dn$motif_end = annotated_dn$motif_end + annotated_dn$pos
 
 if ( args$verbose ) { write(sprintf("Number of de novos passed to input: %i", nrow(de_novos)), stderr()) }
-if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", length(hits_per_de_novo_per_TFBS), stderr())) }
-if ( args$verbose ) { write(sprintf("Total number of predicted TFBS perturbation: %i", nrow(annotated_dn), stderr())) }
+if ( args$verbose ) { write(sprintf("Number of de novos intersecting at least one TFBS: %i", sum(hits_TFBS), stderr())) }
+if ( args$verbose ) { write(sprintf("Total number of predicted TFBS perturbations: %i", nrow(annotated_dn), stderr())) }
 
 write.table(annotated_dn, file = args$out, row.names = FALSE, sep = "\t", col.names = TRUE, quote = FALSE)
 
