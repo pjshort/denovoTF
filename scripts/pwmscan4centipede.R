@@ -92,8 +92,13 @@ if ( args$verbose ) { write("Scanning sequence surrounding each de novo for pred
 
 scans = mapply(LOBGOB_scan, ref_seqs, m+1, as.character(de_novos$ref), as.character(de_novos$alt), MoreArgs = list("pwm_list" = pwm_list, "min.score" = args$min_score))
 # count number of hits per de novo
+
+if ( args$verbose ) { write("LOBGOB scan complete.", stderr()) }
+
 hits_per_de_novo = sapply(scans, function(s) ifelse(is.null(s), 0, nrow(s)))
 hits_TFBS = hits_per_de_novo > 0
+
+if ( args$verbose ) { write("Finished scanning, binding dataframes from scan results.", stderr()) }
 
 # rbind the dataframes from scans
 scores = do.call(rbind, scans)

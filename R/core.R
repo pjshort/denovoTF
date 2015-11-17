@@ -20,7 +20,6 @@ get_sequence <- function(chr, start, stop, version = "hg19") {
   return(seqs)
 }
 
-
 get_alt_sequence <- function(sequence, sub_position, alt) {
   
   # input: sequence, positions where alteration has occured, alteration to substitute in
@@ -74,13 +73,13 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
   # stand for 'loss of binding gain of binding scan'
   
   # TODO: alter so rel_pos can be a range instead of a point!
-  
+
   if (typeof(ref_seq) != "DNAString") { ref_seq = DNAString(ref_seq)}
   
   alt_seq = get_alt_sequence(ref_seq, rel_pos, alt)
   
   # scan against all PWMs with the reference sequence and alt (after mutation)
-  # the only differences between scan results should be as due to a change in binding affinity due to the mutation
+  # the only differences between scan results should be as due to a change in binding affinity due to the mutations
   ref_results = single_sequence_coverage(ref_seq, rel_pos, pwm_list, min.score = min.score)
   alt_results = single_sequence_coverage(alt_seq, rel_pos, pwm_list, min.score = min.score)
   alt_results = alt_results[!(names(alt_results) %in% names(ref_results))] # only the binding events NOT already spotted in ref
@@ -93,9 +92,11 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
   ref_binding_change = lapply(ref_results, function(r) binding_change(r, rel_pos, ref, alt))
   ref_binding_change = do.call(rbind, ref_binding_change)
   
-  ref_motif_start = -rel_pos + unlist(sapply(ref_results, function(s) s@views@ranges@start))
-  ref_motif_end = ref_motif_start + unlist(sapply(ref_results, function(s) s@views@ranges@width)) - 1
-  ref_strand = unlist(sapply(ref_results, function(s) s@strand))
+  # apply as.vector to resolve any cases with binding on both + and - strand
+  # as this case will result in three below as 2 x n/2 matrices rather than 1 x n vector
+  ref_motif_start = -rel_pos + as.vector(unlist(sapply(ref_results, function(s) s@views@ranges@start)))
+  ref_motif_end = ref_motif_start + as.vector(unlist(sapply(ref_results, function(s) s@views@ranges@width)) - 1)
+  ref_strand = as.vector(unlist(sapply(ref_results, function(s) s@strand)))
   
   ref_binding_change = cbind(ref_binding_change, ref_motif_start, ref_motif_end, ref_strand)
   
@@ -104,12 +105,11 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
   alt_binding_change = lapply(alt_results, function(r) binding_change(r, rel_pos, alt, ref))
   alt_binding_change = do.call(rbind, alt_binding_change)
   
-  alt_motif_start = -rel_pos + unlist(sapply(alt_results, function(s) s@views@ranges@start))
-  alt_motif_end = alt_motif_start + unlist(sapply(alt_results, function(s) s@views@ranges@width)) - 1
-  alt_strand = unlist(sapply(alt_results, function(s) s@strand))
-  
-  alt_binding_change = cbind(alt_binding_change, alt_motif_start, alt_motif_end, alt_strand)
-  
+  alt_motif_start = -rel_pos + as.vector(unlist(sapply(alt_results, function(s) s@views@ranges@start)))
+  alt_motif_end = alt_motif_start + as.vector(unlist(sapply(alt_results, function(s) s@views@ranges@width)) - 1)
+  alt_strand = as.vector(unlist(sapply(alt_results, function(s) s@strand)))
+
+  alt_binding_change = cbind(alt_binding_change, alt_motif_start, alt_motif_end, alt_strand)  
   
   all_names = c(rep(names(ref_results), n_ref_bindings), rep(names(alt_results), n_alt_bindings))
   
@@ -122,32 +122,32 @@ LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%")
       print(ref_seq)
     }
     binding_changes = data.frame("jaspar_internal" = all_names, 
-                               "ref_score" = c(ref_binding_change[,1], alt_binding_change[,2]),
-                               "alt_score" = c(ref_binding_change[,2], alt_binding_change[,1]),
+                               "ref_score" = as.numeric(c(ref_binding_change[,1], alt_binding_change[,2])),
+                               "alt_score" = as.numeric(c(ref_binding_change[,2], alt_binding_change[,1])),
                                "motif_start" = as.numeric(c(ref_binding_change[,3], alt_binding_change[,3])),
                                "motif_end" = as.numeric(c(ref_binding_change[,4], alt_binding_change[,4])),
                                "strand" = c(ref_binding_change[,5], alt_binding_change[,5]))
   } else if (length(names(ref_results)) > 0) { # only binding for ref sequence
     binding_changes = data.frame("jaspar_internal" = rep(names(ref_results), n_ref_bindings), 
-                                 "ref_score" = ref_binding_change[,1],
-                                 "alt_score" = ref_binding_change[,2],
+                                 "ref_score" = as.numeric(ref_binding_change[,1]),
+                                 "alt_score" = as.numeric(ref_binding_change[,2]),
                                  "motif_start" = as.numeric(ref_binding_change[,3]),
                                  "motif_end" = as.numeric(ref_binding_change[,4]),
                                  "strand" = ref_binding_change[,5])
   } else { # only binding for alt sequence
     binding_changes = data.frame("jaspar_internal" = rep(names(alt_results), n_alt_bindings), 
-                                 "ref_score" = alt_binding_change[,2],
-                                 "alt_score" = alt_binding_change[,1],
+                                 "ref_score" = as.numeric(alt_binding_change[,2]),
+                                 "alt_score" = as.numeric(alt_binding_change[,1]),
                                  "motif_start" = as.numeric(alt_binding_change[,3]),
                                  "motif_end" = as.numeric(alt_binding_change[,4]),
                                  "strand" = alt_binding_change[,5])
   }
 
-  binding_changes$diff = binding_changes$ref_score - binding_changes$alt_score
+  binding_changes$diff = as.numeric(binding_changes$ref_score) - as.numeric(binding_changes$alt_score)
   
   binding_changes$result = ifelse(binding_changes$diff > 0, "LOSS", "GAIN")
   binding_changes$result[binding_changes$diff == 0] = "SILENT"
-  
+
   return(binding_changes)
   
 }
