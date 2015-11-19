@@ -36,7 +36,7 @@ reqd_columns <- c("chr", "start", "end")
 
 # throw error if any required column is missing
 if (!all(reqd_columns %in% colnames(regions))){
-  stop("One or more of the required column names missing from input de novo file. Requires: \"chr\", \"pos\", \"ref\", \"alt\"")
+  stop("One or more of the required column names missing from input de novo file. Requires: \"chr\", \"start\", \"end\"")
 }
 
 
@@ -73,6 +73,7 @@ hit_count = as.numeric(sapply(scanned_regions, function(r) length(r@listData[[1]
 contains_hit = hit_count > 0
 
 motif_start = as.numeric(unlist(sapply(scanned_regions, function(r) r@listData[[1]]@views@ranges@start)))
+motif_start = rep(regions$start, hit_count) + motif_start - 1
 motif_width = as.numeric(unlist(sapply(scanned_regions, function(r) r@listData[[1]]@views@ranges@width)))
 motif_end = motif_start + motif_width - 1
 
