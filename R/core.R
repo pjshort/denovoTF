@@ -66,6 +66,26 @@ scan_regions <- function(sequences, rel_positions, pwm_list, min.score = "95%"){
   return(scan_results)
 }
 
+scan_full_sequence <- function(seq, pwm_list, min.score = "95%"){
+  
+  # input: DNAString sequence, list of PWMs to query, min.score (optional)
+  # returns: site
+  # returns all regions predicted to have TFB affinity >= min.score
+  
+  # TODO: write test for this section
+  
+  # scan full list of PWMs against the sequence provided
+  site_seq_list = searchSeq(pwm_list, seq, seqname="ref_sequence", min.score=min.score, strand="*")
+  
+  # keep only the TFs that have a hit greater than min score
+  interval_hits = site_seq_list[which(sapply(site_seq_list, length) > 0)]
+  
+  # filter list to remove the empty TFs
+  pos_hits = interval_hits[which(sapply(interval_hits, length) > 0)]
+  
+  return(pos_hits) # returns a (possibly empty) list of SiteSet objects
+}
+
 LOBGOB_scan <- function(ref_seq, rel_pos, ref, alt, pwm_list, min.score = "95%"){
   
   # input: single ref sequence, single alt sequence, list of PWMs to query, minimum binding score (optional)
