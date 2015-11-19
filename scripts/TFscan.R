@@ -35,7 +35,7 @@ regions <- read.table(args$regions, sep = "\t", header = TRUE)
 reqd_columns <- c("chr", "start", "end")
 
 # throw error if any required column is missing
-if (!all(reqd_columns %in% colnames(de_novos))){
+if (!all(reqd_columns %in% colnames(regions))){
   stop("One or more of the required column names missing from input de novo file. Requires: \"chr\", \"pos\", \"ref\", \"alt\"")
 }
 
