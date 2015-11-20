@@ -83,6 +83,10 @@ motif_score = as.numeric(unlist(sapply(scanned_regions, function(r) r@listData[[
 # output will contain chromosome, motif start, motif end, strand, and score
 motif_df = data.frame(Chr = rep(regions$chr, hit_count), Start = motif_start, End = motif_end, Strand = motif_strand, PwmScore = motif_score)
 
+if (all(grepl("^chr", motif_df$Chr)) == FALSE){
+  motif_df$Chr = paste0("chr", motif_df$Chr)
+}
+
 if ( args$verbose ) { write(sprintf("Finished!"), stderr()) }
 
 if (!is.null(args$out)){
