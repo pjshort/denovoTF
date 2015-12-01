@@ -33,6 +33,10 @@ option_list <- list(
               help="Set location to save the output of JASPAR-annotated de novos."),
   make_option("--min_score", default="95%",
               help="Set min score for the JASPAR annotations - less than 95% may yield unrealistic number of predicted binding sites."),
+  make_option("--start_row", default=0,
+              help="If de novos is very large, chunking can be used (pass row to start analysis on)."),
+  make_option("--chunk_size", default=0,
+                  help="If de novos is very large, chunking can be used (pass row to stop analysis on)."),
   make_option("--verbose", action="store_true", default=FALSE,
               help="Print extra output advising the user of progression through the code.")
 )
@@ -42,7 +46,16 @@ args <- parse_args(OptionParser(option_list=option_list))
 
 de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE)
 
+if (args$start_row != 0 & args$chunk_size != 0){
+  write(sprintf("Analyzing chunk of de novos/rare variant file that has been passed (row %i to row %i inclusive).", args$start_row, args$start_row + args$chunk_size - 1), stderr())
+  last_row = min((args$start_row + args$chunk_size - 1), nrow(de_novos))
+  de_novos = de_novos[args$start_row:last_row, ]
+} else {
+  write("Analyzing entire input file of de novos/rare variants. If you would prefer to chunk, pass --start_row and --chunk_size arguments.", stderr())
+}
+  
 # remove indels from de novo file - TODO: add support to analyze indels
+write("Removing any indels from the de novos/rare variant file that has been passed...", stderr())
 de_novos = de_novos[nchar(as.character(de_novos$ref)) == 1 & nchar(as.character(de_novos$alt)) == 1,]
 
 reqd_columns <- c("chr", "pos", "ref", "alt")
