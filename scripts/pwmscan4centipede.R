@@ -27,8 +27,8 @@ source("../R/core.R")
 option_list <- list(
   make_option("--de_novos", default="../data/DDD_noncoding_for_denovoTF.txt",
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
-  make_option("--tf_list", default=FALSE,
-              help="Pass a list of TFs to be run against regions."),
+  make_option("--pwm_file", default=FALSE,
+              help="Pass an RData file with list of manually curated PWMs."),
   make_option("--out", default="../results/JASPAR_tfbs_annotated_de_novos.txt",
               help="Set location to save the output of JASPAR-annotated de novos."),
   make_option("--min_score", default="95%",
@@ -76,14 +76,14 @@ if ( args$verbose ) {
   write("Loading JASPAR position weight matrices from database...", stderr())
 }
 
-# NOTE: db is initialized to ../data/myMatrixDb.sqlite after build.R is run
-pwm_options = list("species" = 9606, "all_versions" = TRUE, "matrixtype" = "PWM") # 9606 = "homo sapiens"
-pwm_list = getMatrixSet(JASPAR2014, pwm_options)
 
-# TODO: update this to take names of transcription factors and slice PWM accordingly
-if (args$tf_list != FALSE){  # switch to reduced set of TFs if requested
-  TFBS_to_scan = read.table(args$tf_list, header = FALSE) # get single column of requested IDs
-  pwm_list = pwm_list[unique(TFBS_to_scan[,1])] # assumed to be a single column
+# updated 8th of December 2015 to take pre-curated PWM list
+if (args$pwm_list != FALSE){  # switch to reduced set of TFs if requested
+  load(args$pwm_list)  # expects to load as pwm_list
+} else {
+  # NOTE: db is initialized to ../data/myMatrixDb.sqlite after build.R is run
+  pwm_options = list("species" = 9606, "all_versions" = TRUE, "matrixtype" = "PWM") # 9606 = "homo sapiens"
+  pwm_list = getMatrixSet(JASPAR2016, pwm_options)
 }
 
 # get longest motif in dataset (to set bound for sequence query)
