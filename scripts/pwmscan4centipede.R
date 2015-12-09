@@ -79,7 +79,7 @@ if ( args$verbose ) {
 
 # updated 8th of December 2015 to take pre-curated PWM list
 if (args$pwm_file != FALSE){  # switch to reduced set of TFs if requested
-  load(args$pwm_list)  # expects to load as pwm_list
+  load(args$pwm_file)  # expects to load as pwm_list
 } else {
   # NOTE: db is initialized to ../data/myMatrixDb.sqlite after build.R is run
   pwm_options = list("species" = 9606, "all_versions" = TRUE, "matrixtype" = "PWM") # 9606 = "homo sapiens"
