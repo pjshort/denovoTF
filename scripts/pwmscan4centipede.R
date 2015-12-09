@@ -73,12 +73,12 @@ if (!("unique_id" %in% colnames(de_novos))){
 ### load the full JASPAR position-weight matrix list using all sources (SELEX, ChIP-seq, protein-binding microarray (PBM))
 # load full PWM list
 if ( args$verbose ) {
-  write("Loading JASPAR position weight matrices from database...", stderr())
+  write("Loading JASPAR position weight matrices...", stderr())
 }
 
 
 # updated 8th of December 2015 to take pre-curated PWM list
-if (args$pwm_list != FALSE){  # switch to reduced set of TFs if requested
+if (args$pwm_file != FALSE){  # switch to reduced set of TFs if requested
   load(args$pwm_list)  # expects to load as pwm_list
 } else {
   # NOTE: db is initialized to ../data/myMatrixDb.sqlite after build.R is run
