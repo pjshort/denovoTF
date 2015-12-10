@@ -27,7 +27,7 @@ source("../R/core.R")
 option_list <- list(
   make_option("--de_novos", default="../data/DDD_noncoding_for_denovoTF.txt",
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
-  make_option("--pwm_file", default=FALSE,
+  make_option("--pwms", default=FALSE,
               help="Pass an RData file with list of manually curated PWMs."),
   make_option("--out", default="../results/JASPAR_tfbs_annotated_de_novos.txt",
               help="Set location to save the output of JASPAR-annotated de novos."),
@@ -78,8 +78,8 @@ if ( args$verbose ) {
 
 
 # updated 8th of December 2015 to take pre-curated PWM list
-if (args$pwm_file != FALSE){  # switch to reduced set of TFs if requested
-  load(args$pwm_file)  # expects to load as pwm_list
+if (args$pwms != FALSE){  # switch to reduced set of TFs if requested
+  load(args$pwms)  # expects to load as pwm_list
 } else {
   # NOTE: db is initialized to ../data/myMatrixDb.sqlite after build.R is run
   pwm_options = list("species" = 9606, "all_versions" = TRUE, "matrixtype" = "PWM") # 9606 = "homo sapiens"
