@@ -44,8 +44,6 @@ option_list <- list(
 args <- parse_args(OptionParser(option_list=option_list))
 ### check that the input file has columns "unique_id", "chr", "pos", "ref", "alt". if no "unique_id", create one
 
-print(args)
-
 de_novos <- read.table(args$de_novos, sep = "\t", header = TRUE)
 
 if (args$start_row != 0 & args$chunk_size != 0){
