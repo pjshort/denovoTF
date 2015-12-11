@@ -27,7 +27,7 @@ source("../R/core.R")
 option_list <- list(
   make_option("--de_novos", default="../data/DDD_noncoding_for_denovoTF.txt",
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
-  make_option("--pwms", default="../data/brain_tf_pwms.RData",
+  make_option("--pwms", default=FALSE,
               help="Pass an RData file with list of manually curated PWMs."),
   make_option("--out", default="../results/JASPAR_tfbs_annotated_de_novos.txt",
               help="Set location to save the output of JASPAR-annotated de novos."),
