@@ -17,7 +17,7 @@ source("../R/core.R")
 option_list <- list(
   make_option("--regions", default="../data/noncoding_regions.txt",
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
-  make_option("--jaspar_motif_id", default="MA0036.1",
+  make_option("--jaspar_motif_id", default="MA0885.1",
               help="Specify which jaspar motif to scan against."),
   make_option("--pwms", default="../data/brain_tf_pwms.RData",
               help="Specify which jaspar motif to scan against."),
@@ -57,8 +57,7 @@ if (args$pwms != FALSE){  # switch to reduced set of TFs if requested
 }
 
 # restrict to only jaspar motif specified
-pwm_list = pwm_list[args$jaspar_motif_id]
-
+pwm_list = pwm_list[[args$jaspar_motif_id]]
 
 # use BSgenomes getSeq method to get sequence in each region
 if ( args$verbose ) { write("Getting sequence context for each region...", stderr()) }
@@ -67,7 +66,7 @@ if ("seq" %in% colnames(regions)){
   seqs = sapply(as.character(regions$seq), function(s) DNAString(s))
   names(seqs) = paste(regions$chr, regions$start, regions$end, sep = ".")
 } else {
-  seqs = get_sequence(paste0("chr", regions$chr), regions$start, regions$end)
+  seqs = as.character(get_sequence(paste0("chr", regions$chr), regions$start, regions$end))
   names(seqs) = paste(regions$chr, regions$start, regions$end, sep = ".")
 }
 
@@ -75,16 +74,16 @@ if ("seq" %in% colnames(regions)){
 if ( args$verbose ) { write("Scanning each sequence for predicted transcription factor binding events...", stderr()) }
 
 scanned_regions = mapply(searchSeq, seqs, MoreArgs = list("seqname"="ref_sequence", "x" = pwm_list, "min.score"=args$min_score, "strand"="*"))
-hit_count = as.numeric(sapply(scanned_regions, function(r) length(r@listData[[1]]@score)))
+hit_count = as.numeric(sapply(scanned_regions, function(r) length(r@score)))
 contains_hit = hit_count > 0
 
-motif_start = as.numeric(unlist(sapply(scanned_regions, function(r) r@listData[[1]]@views@ranges@start)))
+motif_start = as.numeric(unlist(sapply(scanned_regions, function(r) r@views@ranges@start)))
 motif_start = rep(regions$start, hit_count) + motif_start - 1
-motif_width = as.numeric(unlist(sapply(scanned_regions, function(r) r@listData[[1]]@views@ranges@width)))
+motif_width = as.numeric(unlist(sapply(scanned_regions, function(r) r@views@ranges@width)))
 motif_end = motif_start + motif_width - 1
 
-motif_strand = as.character(unlist(sapply(scanned_regions, function(r) r@listData[[1]]@strand)))
-motif_score = as.numeric(unlist(sapply(scanned_regions, function(r) r@listData[[1]]@score)))
+motif_strand = as.character(unlist(sapply(scanned_regions, function(r) r@strand)))
+motif_score = as.numeric(unlist(sapply(scanned_regions, function(r) r@score)))
 
 # output will contain chromosome, motif start, motif end, strand, and score
 motif_df = data.frame(Chr = rep(regions$chr, hit_count), Start = motif_start, End = motif_end, Strand = motif_strand, PwmScore = motif_score)
