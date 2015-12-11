@@ -19,6 +19,8 @@ option_list <- list(
               help="Pass the genomic regions that should be annotated with predicted TF binding sites."),
   make_option("--jaspar_motif_id", default="MA0036.1",
               help="Specify which jaspar motif to scan against."),
+  make_option("--pwms", default="../data/brain_tf_pwms.RData",
+              help="Specify which jaspar motif to scan against."),
   make_option("--out", default=NULL,
               help="Set directory to save the output of scan (looks like MA####.#)"),
   make_option("--min_score", default="95%",
@@ -46,9 +48,13 @@ if ( args$verbose ) {
   write("Loading JASPAR position weight matrices from database...", stderr())
 }
 
-# NOTE: db is initialized to ../data/myMatrixDb.sqlite after build.R is run
-pwm_options = list("species" = 9606, "all_versions" = TRUE, "matrixtype" = "PWM") # 9606 = "homo sapiens"
-pwm_list = getMatrixSet(JASPAR2014, pwm_options)
+if (args$pwms != FALSE){  # switch to reduced set of TFs if requested
+  load(args$pwms)  # expects to load as pwm_list
+} else {
+  # NOTE: db is initialized to ../data/myMatrixDb.sqlite after build.R is run
+  pwm_options = list("species" = 9606, "all_versions" = TRUE, "matrixtype" = "PWM") # 9606 = "homo sapiens"
+  pwm_list = getMatrixSet(JASPAR2016, pwm_options)
+}
 
 # restrict to only jaspar motif specified
 pwm_list = pwm_list[args$jaspar_motif_id]
